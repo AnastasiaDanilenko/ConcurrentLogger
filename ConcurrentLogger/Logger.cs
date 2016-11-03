@@ -8,6 +8,11 @@ using static ConcurrentLogger.Program;
 
 namespace ConcurrentLogger
 {
+    public class ForThread
+    {
+        public List<string> logs;
+        public int countThreads;
+    }
     public class Logger:ILogger
     {
         int bufferLimit;
@@ -28,16 +33,27 @@ namespace ConcurrentLogger
             actualLoggers++;
             if (actualLoggers == bufferLimit)
             {
-                ThreadPool.QueueUserWorkItem(FlushThreads, logInfo);
+                ThreadPool.QueueUserWorkItem(FlushThreads, new ForThread { logs = logInfo, countThreads = threads });
                 threads++;
                 logInfo.Clear();
             }
             logInfo.Add(level.ToString() + message);
         }
 
-        public void FlushThreads(object logs)
+        public void FlushThreads(object Info)
         {
-
+            List<string> listLogs = ((ForThread)Info).logs;
+            int count = ((ForThread)Info).countThreads;
+            lock (locker)
+            {
+                while (threadInfo.ThreadId != currentBufferId)
+                    Monitor.Wait(locker);
+                foreach (ILoggerTarget currentTarget in targets)
+                    foreach (LogInfo log in logsList)
+                        currentTarget.Flush(log);
+                currentBufferId++;
+                Monitor.PulseAll(locker);
+            }
         }
 
     }
