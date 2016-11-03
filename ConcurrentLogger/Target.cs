@@ -2,32 +2,43 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ConcurrentLogger
 {
     public class Target:ILoggerTarget
     {
-        public bool Flush()
+        string file;
+        public Target(string filename)
         {
-            return true;
+            file = filename;
+        }
+        public bool Flush(string s)
+        {
+            using ( StreamWriter sw = new StreamWriter(file, true))
+            {
+                sw.WriteLine(s);
+            }
+                return true;
         }
 
-       public bool fuc()
+        public Task<bool> FlushAsync(string s)
         {
-            return true;
-        }
-
-        public Task<bool> FlushAsync()
-        {
-            return new Task<bool>(fuc
-                );
+            return new Task<bool>(() => {
+                using (StreamWriter sw = new StreamWriter(file))
+                {
+                    sw.WriteLineAsync(s);
+                }
+                return true;
+            });
         }
     }
 
     public interface ILoggerTarget
     {
-        bool Flush();
-        Task<bool> FlushAsync();
+        bool Flush(string s);
+        Task<bool> FlushAsync(string s);
     }
 }

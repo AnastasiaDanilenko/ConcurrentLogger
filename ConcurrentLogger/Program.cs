@@ -18,17 +18,19 @@ namespace ConcurrentLogger
 
         static void Main(string[] args)
         {
-            Target loggerFile = new Target("E:\\LoggerFile.txt");
+            Target loggerFile = new Target("LoggerFile.txt");
             ILoggerTarget[] loggerTargets = new ILoggerTarget[] { loggerFile };
-            Console.WriteLine("Limit");
+            Console.WriteLine("Limit:");
             int limit = Convert.ToInt32(Console.ReadLine());
-            Console.WriteLine("Loggers");
+            Console.WriteLine("Loggers:");
             int loggers = Convert.ToInt32(Console.ReadLine());
             Logger logger = new Logger(limit, loggerTargets);
-            for (int i = 0; i<loggers; i++)
+            for (int i = 1; i<loggers; i++)
             {
                 logger.Log(LogLevel.Info, DateTime.Now.ToString() +" " + i.ToString());
             }
+            Console.ReadKey();
         }
+
     }
 }

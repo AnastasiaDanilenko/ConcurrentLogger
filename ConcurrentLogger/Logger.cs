@@ -15,11 +15,13 @@ namespace ConcurrentLogger
     }
     public class Logger:ILogger
     {
-        int bufferLimit;
+       public  int bufferLimit;
         int actualLoggers;
-        int threads;
+        public int threads;
+        public volatile int i = 1;
         ILoggerTarget[] listTargets = null;
         List<string> logInfo = new List<string>();
+        object locker = new object();
         public Logger(int bufferLimit, ILoggerTarget[] targets)
         {
             this.bufferLimit = bufferLimit;
@@ -30,13 +32,14 @@ namespace ConcurrentLogger
 
         public void Log(LogLevel level, string message)
         {
-            actualLoggers++;
-            if (actualLoggers == bufferLimit)
+            if (actualLoggers == bufferLimit-1)
             {
-                ThreadPool.QueueUserWorkItem(FlushThreads, new ForThread { logs = logInfo, countThreads = threads });
                 threads++;
-                logInfo.Clear();
+                ThreadPool.QueueUserWorkItem(FlushThreads, new ForThread { logs = logInfo, countThreads = threads });
+                logInfo = new List<string>();
+                actualLoggers = 0;
             }
+            actualLoggers++;
             logInfo.Add(level.ToString() + message);
         }
 
@@ -44,16 +47,16 @@ namespace ConcurrentLogger
         {
             List<string> listLogs = ((ForThread)Info).logs;
             int count = ((ForThread)Info).countThreads;
-            lock (locker)
-            {
-                while (threadInfo.ThreadId != currentBufferId)
+            Console.WriteLine("Thread number " + count + " entered the critical area");
+            Monitor.Enter(locker);          
+                while (i != count)
                     Monitor.Wait(locker);
-                foreach (ILoggerTarget currentTarget in targets)
-                    foreach (LogInfo log in logsList)
-                        currentTarget.Flush(log);
-                currentBufferId++;
-                Monitor.PulseAll(locker);
-            }
+            Console.WriteLine("Thread number " + count + " is writing its logs");
+            foreach (string s in listLogs)
+                    listTargets[0].Flush(s);
+            i++;
+            Monitor.PulseAll(locker);
+            Monitor.Exit(locker);
         }
 
     }
