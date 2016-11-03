@@ -6,8 +6,16 @@ using System.Threading.Tasks;
 
 namespace ConcurrentLogger
 {
-    class Program
+    public class Program
     {
+        public enum LogLevel
+        {
+            Debug,
+            Info,
+            Warning,
+            Error
+        }
+
         static void Main(string[] args)
         {
         }
