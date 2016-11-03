@@ -9,9 +9,12 @@ namespace ConcurrentLogger
 {
     public class Logger:ILogger
     {
+        int bufferLimit;
+        ILoggerTarget[] listTargets = null;
         public Logger(int bufferLimit, ILoggerTarget[] targets)
         {
-         
+            this.bufferLimit = bufferLimit;
+            listTargets = targets;
         }
 
         public void Log(LogLevel level, string message)
